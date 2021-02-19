@@ -1,32 +1,34 @@
 version: 2.1
 
-commands:
-  sayhello:
-    description: "A very simple command for demonstration purposes"
-    
 jobs:
-  save_hello_world_output:
+  build:
     docker:
       - image: circleci/node:13.8.0
     steps:
-      - run: echo "hello world" > ~/output.txt
-      - persist_to_workspace:
-          root: ~/
-          paths:
-            - output.txt
-
-  print_output_file:
+      - checkout
+      - run: npm i
+      - run: npm run lint
+  test:
     docker:
       - image: circleci/node:13.8.0
     steps:
-      - attach_workspace:
-          at: ~/
-      - run: cat ~/output.txt
+      - checkout
+      - run: npm i
+      - run: npm run test
+  analyze:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - run: npm audit
 
 workflows:
   my_workflow:
     jobs:
-      - save_hello_world_output
-      - print_output_file:
+      - build
+      - test:
           requires:
-            - save_hello_world_output
+            - build
+      - analyze:
+          requires:
+            - test
